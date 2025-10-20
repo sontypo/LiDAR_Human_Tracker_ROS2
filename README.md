@@ -438,7 +438,7 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ## 👥 Authors
 
-- **Saun Nguyen** - *Initial work and enhancements* - [son94227@gmail.com](mailto:son94227@gmail.com)
+- **Saun Nguyen** - *Initial work and enhancements* - [✉](mailto:son94227@gmail.com)
 
 ## 🙏 Acknowledgments
 
