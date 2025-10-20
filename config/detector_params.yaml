@@ -1,0 +1,25 @@
+/**:
+  ros__parameters:
+    # Basic detection parameters
+    confidence_threshold: 0.5
+    cluster_tolerance: 0.2
+    min_cluster_size: 30
+    max_cluster_size: 10000
+    min_height: 0.5
+    max_height: 2.0
+    person_width: 0.5
+    
+    # Enhanced robust detection parameters
+    max_detection_range: 15.0      # Maximum detection distance (meters)
+    min_detection_range: 0.5       # Minimum detection distance (meters)
+    ground_tolerance: 0.15         # Ground plane segmentation tolerance
+    outlier_threshold: 1.0         # Statistical outlier removal threshold
+    min_point_density: 6.0         # Minimum points per cubic meter (reduced for standing humans)
+    aspect_ratio_threshold: 3.0    # Maximum height/width ratio
+    symmetry_threshold: 0.2        # Minimum symmetry score (reduced for static poses)
+    
+    # Standing human specific parameters
+    voxel_leaf_size: 0.08          # Voxel grid leaf size (larger preserves more points)
+    adaptive_clustering: true      # Enable adaptive clustering for better standing detection
+    standing_density_factor: 0.7   # Density factor for standing humans (0.7 = 30% reduction)
+    min_stationary_points: 20      # Minimum points required for standing human detection

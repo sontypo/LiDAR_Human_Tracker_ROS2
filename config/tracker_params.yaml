@@ -1,0 +1,39 @@
+/**:
+  ros__parameters:
+    # Multi-target tracking parameters
+    max_distance: 1.0  # Maximum distance for data association (meters)
+    max_age: 10        # Maximum track age before deletion
+    min_hits: 3        # Minimum hits to confirm a track
+    process_rate: 10.0 # Processing rate in Hz
+    
+    # Enhanced Kalman Filter Parameters for Higher Effectiveness
+    
+    # Process Noise Tuning (controls prediction uncertainty)
+    kalman_process_noise_pos: 0.3      # Position process noise (reduced for stability)
+    kalman_process_noise_vel: 0.8      # Velocity process noise (optimized for human motion)
+    kalman_process_noise_acc: 1.5      # Acceleration process noise (reduced for smoother tracking)
+    
+    # Measurement Noise Adaptation
+    kalman_base_measurement_noise: 0.08    # Base measurement noise (improved sensor confidence)
+    kalman_max_measurement_noise: 0.8      # Maximum adaptive measurement noise
+    kalman_innovation_threshold: 1.8       # Innovation threshold for noise adaptation
+    
+    # Advanced Kalman Filter Settings
+    kalman_initial_position_uncertainty: 50.0   # Initial position uncertainty
+    kalman_initial_velocity_uncertainty: 10.0   # Initial velocity uncertainty  
+    kalman_initial_acceleration_uncertainty: 100.0  # Initial acceleration uncertainty
+    
+    # Adaptive Behavior Parameters
+    kalman_prediction_uncertainty_growth: 0.3   # How fast uncertainty grows during predictions
+    kalman_innovation_forgetting_factor: 0.85   # How quickly to return to base noise (0.9 = slow, 0.7 = fast)
+    kalman_motion_smoothing_factor: 0.95        # Motion smoothing for consistent tracking
+    
+    # Tracking Quality Enhancement
+    kalman_enable_joseph_form: true             # Use Joseph form for numerical stability
+    kalman_enable_outlier_rejection: true       # Enable measurement outlier rejection
+    kalman_outlier_threshold: 3.0              # Outlier rejection threshold (Mahalanobis distance)
+    
+    # Human Motion Model Parameters
+    kalman_max_human_velocity: 3.0             # Maximum expected human velocity (m/s)
+    kalman_max_human_acceleration: 5.0         # Maximum expected human acceleration (m/s²)
+    kalman_enable_velocity_gating: true        # Enable velocity-based validation gate
