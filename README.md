@@ -25,6 +25,14 @@
 - **Standing Detection Optimization**: Specialized handling for stationary humans
 - **Environmental Adaptability**: Configurable parameters for various outdoor scenarios
 
+### Group Clustering & Social Awareness
+- **Intelligent Group Detection**: Automatic clustering of nearby humans into social groups
+- **Group State Publishing**: Real-time group centroids, velocities, and safety spaces
+- **Safety Radius Calculation**: Dynamic safety space estimation based on group size and spread
+- **Individual-as-Group Support**: Single humans treated as groups for consistent interface
+- **Up to 15 Groups**: Scalable group tracking for crowded environments
+- **Social Navigation Ready**: Group states formatted for social-aware robot navigation
+
 ## 📋 Table of Contents
 
 - [Installation](#installation)
@@ -226,6 +234,23 @@ kalman_max_human_acceleration: 5.0         # Max acceleration (m/s²)
 kalman_enable_velocity_gating: true        # Velocity gating
 ```
 
+### Group Clustering Parameters (`config/group_cluster_params.yaml`)
+
+**Group Detection**:
+```yaml
+max_group_distance: 2.0        # Maximum distance between humans to be in same group (m)
+max_groups: 15                 # Maximum number of groups to track
+treat_individual_as_group: true # Always treat single human as group (required)
+```
+
+**Safety Radius Calculation**:
+```yaml
+min_safety_radius: 0.8         # Minimum safety radius for individual human (m)
+max_safety_radius: 3.0         # Maximum safety radius for groups (m)  
+safety_radius_factor: 1.5      # Factor to calculate safety radius from group spread
+group_velocity_threshold: 0.1  # Minimum velocity to consider group moving (m/s)
+```
+
 ## 📡 Topics and Services
 
 ### Subscribed Topics
@@ -242,6 +267,9 @@ kalman_enable_velocity_gating: true        # Velocity gating
 | `/human_detections_pointcloud` | `sensor_msgs/PointCloud2` | Colored pointclouds of detected humans |
 | `/tracked_humans` | `human_tracker_ros2/TrackedHumans` | Array of tracked humans |
 | `/tracked_humans_markers` | `visualization_msgs/MarkerArray` | Visualization markers for RViz |
+| `/group_states` | `human_tracker_ros2/GroupStates` | Array of group states with centroids and safety radii |
+| `/group_state_ndarray` | `human_tracker_ros2/GroupStateArray` | Fixed 15-group array format [x,y,vx,vy,r] with zero-padding |
+| `/group_markers` | `visualization_msgs/MarkerArray` | Group visualization markers for RViz |
 
 ### Custom Messages
 
@@ -273,6 +301,71 @@ std_msgs/Header header
 TrackedHuman[] humans
 ```
 
+**GroupState.msg**:
+```
+std_msgs/Header header
+int32 group_id
+geometry_msgs/Point position      # Group centroid position [x, y, z]
+geometry_msgs/Vector3 velocity    # Group centroid velocity [vx, vy, vz]
+float64 safety_radius            # Safety space radius of the group
+int32 member_count               # Number of humans in this group
+int32[] member_ids               # Track IDs of group members
+```
+
+**GroupStates.msg**:
+```
+std_msgs/Header header
+GroupState[] groups
+int32 total_groups
+```
+
+**GroupStateArray.msg**:
+```
+std_msgs/Header header
+std_msgs/Float64MultiArray data  # Fixed 15 groups, each as [x, y, vx, vy, r]
+int32 num_groups                 # Number of actual groups (non-zero entries)
+```
+
+### Group State NDArray Format
+
+The `/group_state_ndarray` topic provides group states in a **fixed 15-group array format** with **guaranteed closest group selection**:
+
+**Data Structure:**
+- **Fixed size**: Always contains exactly 15 groups
+- **Closest groups first**: Groups are sorted by distance from reference point (robot position)
+- Each group is represented as: `[x, y, vx, vy, r]`
+- `x, y`: Group centroid position (meters)
+- `vx, vy`: Group centroid velocity (m/s)
+- `r`: Safety radius (meters)
+- **Empty slots**: Filled with `[0.0, 0.0, 0.0, 0.0, 0.0]` when fewer than 15 groups detected
+
+**Closest Groups Guarantee:**
+- **Sorting algorithm**: Groups sorted by Euclidean distance from reference point
+- **Selection**: Only the 15 closest groups are included
+- **Distance calculation**: `sqrt((x - ref_x)² + (y - ref_y)²)`
+- **Reference point**: Configurable via `reference_x` and `reference_y` parameters (default: 0,0)
+
+**Usage Benefits:**
+- **Consistent array size**: Always 15×5 = 75 elements
+- **Easy indexing**: Direct access without size checks
+- **Memory efficient**: Fixed allocation for real-time systems
+- **Zero padding**: Clear indication of empty slots
+
+**Example Usage:**
+```python
+# ROS2 Python subscriber example
+def group_state_callback(msg):
+    actual_groups = msg.num_groups  # Number of real groups
+    data = np.array(msg.data.data).reshape(15, 5)  # Always 15x5 shape
+    
+    # Process actual groups
+    for i in range(actual_groups):
+        x, y, vx, vy, r = data[i]
+        print(f"Group {i}: pos=({x:.2f}, {y:.2f}), vel=({vx:.2f}, {vy:.2f}), radius={r:.2f}")
+    
+    # Remaining slots (actual_groups to 14) are all zeros
+```
+
 ## 📊 Visualization
 
 ### RViz Configuration
@@ -288,6 +381,8 @@ TrackedHuman[] humans
    - **Human pointclouds**: Unique intensity gradients per human
    - **Tracking arrows**: Velocity direction and magnitude
    - **Track IDs**: Text labels for identification
+   - **Group centroids**: Color-coded by group size (Green=individual, Yellow=small group, Red=large group)
+   - **Safety circles**: Orange transparent circles showing group safety radii
 
 ### Visualization Features
 
@@ -295,6 +390,10 @@ TrackedHuman[] humans
 - **Velocity Arrows**: Direction and speed visualization
 - **Track ID Labels**: Persistent identification numbers
 - **Tracking History**: Trajectory trails (optional)
+- **Group Centroids**: Spherical markers showing group centers
+- **Safety Radius Visualization**: Transparent cylinders showing group safety spaces
+- **Group Velocity Arrows**: Blue arrows showing group movement direction
+- **Group ID Labels**: Text showing group ID and member count (e.g., "G1(3)")
 
 ## 🔧 Performance Tuning
 

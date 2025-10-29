@@ -10,15 +10,24 @@ def generate_launch_description():
     
     detector_config = os.path.join(pkg_dir, 'config', 'detector_params.yaml')
     tracker_config = os.path.join(pkg_dir, 'config', 'tracker_params.yaml')
+    group_cluster_config = os.path.join(pkg_dir, 'config', 'group_cluster_params.yaml')
     
     # Launch arguments
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
+    lidar_topic = LaunchConfiguration('lidar_topic', default='/livox/lidar')
     
     return LaunchDescription([
         DeclareLaunchArgument(
             'use_sim_time',
             default_value='false',
             description='Use simulation time if true'
+        ),
+        
+        DeclareLaunchArgument(
+            'lidar_topic',
+            default_value='/livox/lidar',
+            # default_value='/velodyne_points',
+            description='LiDAR point cloud topic name'
         ),
         
         # Human detector node
@@ -32,7 +41,7 @@ def generate_launch_description():
                 {'use_sim_time': use_sim_time}
             ],
             remappings=[
-                ('input/pointcloud', '/livox/lidar')
+                ('input/pointcloud', lidar_topic)
             ]
         ),
         
@@ -44,6 +53,18 @@ def generate_launch_description():
             output='screen',
             parameters=[
                 tracker_config,
+                {'use_sim_time': use_sim_time}
+            ]
+        ),
+        
+        # Group cluster node
+        Node(
+            package='human_tracker_ros2',
+            executable='group_cluster_node',
+            name='group_cluster',
+            output='screen',
+            parameters=[
+                group_cluster_config,
                 {'use_sim_time': use_sim_time}
             ]
         )

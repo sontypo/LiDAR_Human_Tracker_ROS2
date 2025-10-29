@@ -1,0 +1,14 @@
+/**:
+  ros__parameters:
+    # Group clustering parameters
+    max_group_distance: 2.0        # Maximum distance between humans to be in same group (meters)
+    min_safety_radius: 0.8         # Minimum safety radius for individual human (meters)
+    max_safety_radius: 3.0         # Maximum safety radius for groups (meters)  
+    safety_radius_factor: 1.5      # Factor to calculate safety radius from group spread
+    max_groups: 15                 # Maximum number of groups to track
+    group_velocity_threshold: 0.1  # Minimum velocity to consider group moving (m/s)
+    treat_individual_as_group: true # Always treat single human as group (required per spec)
+    
+    # Reference point for closest group calculation (robot position)
+    reference_x: 0.0               # Reference X position (meters) - set to robot's position
+    reference_y: 0.0               # Reference Y position (meters) - set to robot's position

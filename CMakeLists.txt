@@ -27,6 +27,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/DetectedHuman.msg"
   "msg/TrackedHuman.msg"
   "msg/TrackedHumans.msg"
+  "msg/GroupState.msg"
+  "msg/GroupStates.msg"
+  "msg/GroupStateArray.msg"
   DEPENDENCIES std_msgs sensor_msgs geometry_msgs visualization_msgs
 )
 
@@ -74,6 +77,18 @@ ament_target_dependencies(tracker_lib
 )
 target_link_libraries(tracker_lib "${cpp_typesupport_target}")
 
+# Create group clustering library
+add_library(group_cluster_lib
+  src/clustering/group_cluster.cpp
+)
+ament_target_dependencies(group_cluster_lib
+  rclcpp
+  std_msgs
+  geometry_msgs
+  Eigen3
+)
+target_link_libraries(group_cluster_lib "${cpp_typesupport_target}")
+
 # Create detector node executable
 add_executable(detector_node src/nodes/detector_node.cpp)
 target_link_libraries(detector_node 
@@ -99,6 +114,16 @@ ament_target_dependencies(tracker_node
   visualization_msgs
 )
 
+# Create group cluster node executable
+add_executable(group_cluster_node src/nodes/group_cluster_node.cpp)
+target_link_libraries(group_cluster_node group_cluster_lib)
+ament_target_dependencies(group_cluster_node
+  rclcpp
+  std_msgs
+  geometry_msgs
+  visualization_msgs
+)
+
 # Create test pointcloud publisher (for testing colored pointclouds)
 add_executable(test_colored_pointcloud src/test/test_colored_pointcloud.cpp)
 target_link_libraries(test_colored_pointcloud 
@@ -114,6 +139,7 @@ ament_target_dependencies(test_colored_pointcloud
 install(TARGETS
   detector_node
   tracker_node
+  group_cluster_node
   test_colored_pointcloud
   DESTINATION lib/${PROJECT_NAME}
 )
@@ -122,6 +148,7 @@ install(TARGETS
 install(TARGETS
   detector_lib
   tracker_lib
+  group_cluster_lib
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -141,7 +168,7 @@ install(DIRECTORY
 
 # Export package dependencies
 ament_export_include_directories(include)
-ament_export_libraries(detector_lib tracker_lib)
+ament_export_libraries(detector_lib tracker_lib group_cluster_lib)
 ament_export_dependencies(
   rclcpp
   std_msgs
